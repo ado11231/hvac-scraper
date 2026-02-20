@@ -29,7 +29,7 @@ uvicorn main:app --reload
 ```bash
 curl -X POST http://127.0.0.1:8000/scrape \
   -H "Content-Type: application/json" \
-  -d '{"manufacturer": "carrier", "model_number": "58STA"}'
+  -d '{"manufacturer": "manufactuerer_name_str", "model_number": "model_num_str)"}'
 ```
 
 ---
