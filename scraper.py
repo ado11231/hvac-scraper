@@ -5,8 +5,7 @@ import json
 from playwright.async_api import async_playwright
 from utils.pdf_extractor import extract_text_from_pdf
 
-async def scrape(config: dict, model_number: str, manufactuerer: str):
-    os.makedirs("output", exist_ok=True)
+async def scrape(config: dict, model_number: str, manufacturer: str):
     async with async_playwright() as p:
         browser = await p.chromium.launch()
         page = await browser.new_page()
@@ -29,7 +28,15 @@ async def scrape(config: dict, model_number: str, manufactuerer: str):
                 response = httpx.get(pdf_url)
                 
                 filename = pdf_url.split("/")[-1]
-                filepath = os.path.join("output", filename)
+                
+                pdf_dir = os.path.join("output", manufacturer, "pdf")
+                json_dir = os.path.join("output", manufacturer, "json")
+                os.makedirs(pdf_dir, exist_ok = True)
+                os.makedirs(json_dir, exist_ok = True)
+
+                json_filename = f"{manufacturer}_{model_number}_{doc_type}_{filename}.json"
+                filepath = os.path.join(pdf_dir, filename)
+                json_filepath = os.path.join(json_dir, json_filename)
 
                 with open(filepath, "wb") as f:
                     f.write(response.content)
@@ -37,7 +44,7 @@ async def scrape(config: dict, model_number: str, manufactuerer: str):
                 extracted = extract_text_from_pdf(filepath)
 
                 result = {
-                    "manufacturer": manufactuerer,
+                    "manufacturer": manufacturer,
                     "model_number": model_number,
                     "doc_type": doc_type,
                     "source_url": pdf_url,
@@ -47,9 +54,6 @@ async def scrape(config: dict, model_number: str, manufactuerer: str):
                     "success": extracted["success"],
                     "scraped_at": datetime.datetime.now().isoformat()
                 }
-
-                json_filename = f"carrier_{model_number}_{doc_type}.json"
-                json_filepath = os.path.join("output", json_filename)
 
                 with open(json_filepath, "w") as f:
                     json.dump(result, f, indent=4 )                    
